@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Frame Processor</title>
+    <style>
+        #videoFrame {
+            width: auto;
+            height: 300px; /* Adjust size as needed */
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload a Video to Process</h1>
+    <input type="file" id="videoInput" accept="video/*">
+    <button onclick="uploadVideo()">Upload Video</button>
+    <img id="videoFrame" src="">
+
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://127.0.0.1:8080/video');
+        const videoFrame = document.getElementById('videoFrame');
+
+        socket.on('connect', function() {
+            console.log('Connected to the server!');
+        });
+
+        // socket.on('new_frame', function(data) {
+        //     // Update the src attribute of the videoFrame image to show the current frame
+        //     videoFrame.src = 'data:image/jpeg;base64,' + btoa(String.fromCharCode(...new Uint8Array(data.data)));
+        // });
+
+        socket.on('new_frame', function(data) {
+        // Update the src attribute of the videoFrame image to show the current frame
+        videoFrame.src = `data:image/jpeg;base64,${data.data}`;
+        });
+
+        socket.on('video_complete', function(data) {
+            console.log('Video processing completed');
+            videoFrame.src = '';  // Clear the last frame or set a completion image
+        });
+
+        function uploadVideo() {
+            const fileInput = document.getElementById('videoInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a video file to upload.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('http://127.0.0.1:8080/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => console.log(data))
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to upload video: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>
