@@ -7,3 +7,4 @@ yolov8n.onnx
 yolov8n.pt
 temp_vids
 test_lambda.py
+animal-backend
